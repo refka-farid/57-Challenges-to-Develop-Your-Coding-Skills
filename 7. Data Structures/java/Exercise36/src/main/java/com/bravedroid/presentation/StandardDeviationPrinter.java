@@ -10,8 +10,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.bravedroid.presentation.StandardDeviationPrinter.InputHandler.*;
-
 public class StandardDeviationPrinter {
   private final Logger logger;
   private BufferedReader input;
@@ -23,15 +21,18 @@ public class StandardDeviationPrinter {
   }
 
   public void printStandardDeviation() throws IOException {
-    loop:
+
     while (true) {
       Printer.print("Enter a number :");
       String responseTime = input.readLine();
 
       InputHandler inputHandler = new InputHandler();
-      int result = inputHandler.processInput(responseTime);
+      Result result = inputHandler.processInput(responseTime);
+      result.process();
+      if (result instanceof ValidResult)
+        break;
 
-      switch (result) {
+      /*switch (result) {
         case MUST_EXIT:
           throw new MustExitException();
         case IS_BLANK:
@@ -52,7 +53,7 @@ public class StandardDeviationPrinter {
           break loop;
         default:
           throw new IllegalArgumentException("unknown result " + result);
-      }
+      }*/
     }
   }
 
@@ -88,6 +89,11 @@ public class StandardDeviationPrinter {
     return input.equals("exit");
   }
 
+
+  interface Result {
+    void process();
+  }
+
   public static class MustExitException extends RuntimeException {
     MustExitException() {
       super("user requested exit exception");
@@ -95,19 +101,60 @@ public class StandardDeviationPrinter {
   }
 
   class InputHandler {
-    static final int MUST_EXIT = 0;
-    static final int IS_BLANK = 1;
-    static final int DONE = 2;
-    static final int IS_NUMERIC = 3;
-    static final int VALID_INPUT = 4;
-
-    int processInput(String responseTime) {
-      if (mustExitMethod(responseTime.trim())) return MUST_EXIT;
-      if (isBlank(responseTime)) return IS_BLANK;
-      if (!isNumeric(responseTime.trim()) && !responseTime.trim().equals("done")) return DONE;
-      if (isNumeric(responseTime.trim())) return IS_NUMERIC;
-      return VALID_INPUT;
-
+    Result processInput(String responseTime) {
+      if (mustExitMethod(responseTime.trim())) return new ExitResult();
+      if (isBlank(responseTime)) return new BlankResult();
+      if (!isNumeric(responseTime.trim()) && !responseTime.trim().equals("done"))
+        return new DoneResult(responseTime);
+      if (isNumeric(responseTime.trim())) return new NumericResult();
+      return new ValidResult();
     }
   }
+
+  class ExitResult implements Result {
+    @Override
+    public void process() {
+      throw new MustExitException();
+    }
+  }
+
+  class BlankResult implements Result {
+    @Override
+    public void process() {
+      logger.log(numbers);
+      Printer.print("Don't enter a blank name ");
+    }
+  }
+
+  class DoneResult implements Result {
+    private final String responseTime;
+
+    DoneResult(String responseTime) {
+      this.responseTime = responseTime;
+    }
+
+    @Override
+    public void process() {
+      double timeInMilliseconds = Double.parseDouble(responseTime.trim());
+      numbers.add(timeInMilliseconds);
+      logger.log(numbers);
+    }
+  }
+
+  class NumericResult implements Result {
+
+    @Override
+    public void process() {
+      logger.log(numbers);
+      Printer.print("Input is not numeric ");
+    }
+  }
+
+  class ValidResult implements Result {
+    @Override
+    public void process() {
+      printStatistics();
+    }
+  }
+
 }
