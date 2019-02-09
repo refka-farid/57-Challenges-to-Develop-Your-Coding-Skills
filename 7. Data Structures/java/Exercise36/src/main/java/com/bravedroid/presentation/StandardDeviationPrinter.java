@@ -32,28 +32,6 @@ public class StandardDeviationPrinter {
       if (result instanceof ValidResult)
         break;
 
-      /*switch (result) {
-        case MUST_EXIT:
-          throw new MustExitException();
-        case IS_BLANK:
-          logger.log(numbers);
-          Printer.print("Don't enter a blank name ");
-          break;
-        case IS_NUMERIC:
-          logger.log(numbers);
-          Printer.print("Input is not numeric ");
-          break;
-        case DONE:
-          double timeInMilliseconds = Double.parseDouble(responseTime.trim());
-          numbers.add(timeInMilliseconds);
-          logger.log(numbers);
-          break;
-        case VALID_INPUT:
-          printStatistics();
-          break loop;
-        default:
-          throw new IllegalArgumentException("unknown result " + result);
-      }*/
     }
   }
 
