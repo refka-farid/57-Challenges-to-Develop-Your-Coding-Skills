@@ -59,9 +59,9 @@ public class FilteredValuesPrinter {
   }
 
   /*package*/ int[] validateInput(String inputFromUser) {
-    if (mustExitMethod(inputFromUser)) throw new MustExitException();
-    if (isBlank(inputFromUser) || (isNotAllNumeric(inputFromUser))) throw new WrongInputException();
-    return extractInts(inputFromUser);
+    final InputHandler inputHandler = new InputHandler();
+    final Result result = inputHandler.processInput(inputFromUser);
+    return result.process();
   }
 
   private int[] extractInts(String inputFromUser) {
@@ -93,6 +93,48 @@ public class FilteredValuesPrinter {
       password.append(String.valueOf(item)).append(" ");
     }
     return password.toString();
+  }
+
+  interface Result {
+    int[] process();
+  }
+
+  class InputHandler {
+    Result processInput(String inputFromUser) {
+      if (mustExitMethod(inputFromUser)) return new ExitResult();
+      if (isBlank(inputFromUser) || (isNotAllNumeric(inputFromUser))) return new WrongInputResult();
+
+      return new ValidResult(inputFromUser);
+    }
+  }
+
+  class ExitResult implements Result {
+    @Override
+    public int[] process() {
+      throw new MustExitException();
+    }
+  }
+
+  class WrongInputResult implements Result {
+
+    @Override
+    public int[] process() {
+      throw new WrongInputException();
+    }
+  }
+
+
+  class ValidResult implements Result {
+    String inputFromUser;
+
+    ValidResult(String inputFromUser) {
+      this.inputFromUser = inputFromUser;
+    }
+
+    @Override
+    public int[] process() {
+      return extractInts(inputFromUser);
+    }
   }
 }
 
